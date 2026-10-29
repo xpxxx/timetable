@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#f6f1e8" />
+  <meta name="description" content="一个本地优先、支持多时区与导入导出的个人课程时间表。" />
+  <meta name="color-scheme" content="light" />
+  <title>课时空档 · 时区周历</title>
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div>
+        <div>
+          <div class="eyebrow">PRIVATE SCHEDULER</div>
+          <h1>课时空档</h1>
+        </div>
+      </div>
+      <div class="header-actions">
+        <label class="timezone-control">
+          <span>展示时区</span>
+          <select id="timezoneSelect" aria-label="展示时区"></select>
+        </label>
+        <button class="button secondary mobile-settings" id="mobileSettingsBtn" type="button" aria-controls="sidebar" aria-expanded="false">设置</button>
+        <button class="button secondary" id="screenshotBtn" type="button">截图模式</button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <aside class="sidebar" id="sidebar">
+        <section class="panel intro-panel">
+          <div class="panel-kicker">本地 · 私密</div>
+          <h2>安排你的可预约时间</h2>
+          <p>所有设置仅保存在当前浏览器。你只需标出已占用时段，其余非休息时间会自动显示为空闲。</p>
+        </section>
+
+        <section class="panel">
+          <div class="panel-heading">
+            <div>
+              <div class="panel-kicker">01</div>
+              <h3>每日休息</h3>
+            </div>
+            <span class="zone-chip">北京时间</span>
+          </div>
+          <div class="rest-grid">
+            <label>从<input id="restStart" type="time" step="1800" value="00:00" /></label>
+            <label>到<input id="restEnd" type="time" step="1800" value="08:00" /></label>
+          </div>
+          <p class="help">每天重复。支持跨午夜，例如 23:00–08:00。</p>
+        </section>
+
+        <section class="panel">
+          <div class="panel-heading">
+            <div>
+              <div class="panel-kicker">02</div>
+              <h3>添加已占用</h3>
+            </div>
+            <span class="zone-chip">北京时间</span>
+          </div>
+          <form id="sessionForm">
+            <fieldset class="type-picker">
+              <legend>占用类型</legend>
+              <div class="type-options">
+                <label class="type-option lesson-type">
+                  <input type="radio" name="sessionType" value="lesson" checked />
+                  <span class="type-dot" aria-hidden="true"></span>
+                  <span>已排课</span>
+                </label>
+                <label class="type-option personal-type">
+                  <input type="radio" name="sessionType" value="personal" />
+                  <span class="type-dot" aria-hidden="true"></span>
+                  <span>个人事务</span>
+                </label>
+              </div>
+            </fieldset>
+            <label>日期<input id="sessionDate" type="date" required /></label>
+            <div class="time-grid">
+              <label>开始<input id="sessionStart" type="time" step="1800" value="18:00" required /></label>
+              <label>结束<input id="sessionEnd" type="time" step="1800" value="19:00" required /></label>
+            </div>
+            <label>备注（可选）<input id="sessionNote" type="text" maxlength="30" placeholder="例如：已有课程" /></label>
+            <button class="button primary full" type="submit">添加到周历</button>
+            <p id="formError" class="error" role="alert"></p>
+          </form>
+        </section>
+
+        <section class="panel sessions-panel">
+          <div class="panel-heading compact">
+            <h3>已占用时段</h3>
+            <button class="text-button" id="clearSessions" type="button">全部清空</button>
+          </div>
+          <div id="sessionList" class="session-list"></div>
+        </section>
+
+        <section class="panel backup-panel">
+          <div class="panel-heading compact">
+            <div>
+              <div class="panel-kicker">03</div>
+              <h3>数据备份</h3>
+            </div>
+            <span class="local-chip">仅本地</span>
+          </div>
+          <p class="help backup-help">导出全部排课、个人事务和设置。部署后可导入同一文件恢复。</p>
+          <div class="backup-actions">
+            <button class="button secondary" id="exportBackup" type="button">导出备份</button>
+            <label class="button primary import-button" for="importBackup">导入恢复</label>
+            <input id="importBackup" class="visually-hidden" type="file" accept="application/json,.json" />
+          </div>
+          <p id="backupStatus" class="backup-status" role="status" aria-live="polite"></p>
+        </section>
+      </aside>
+
+      <section class="calendar-card">
+        <div class="calendar-toolbar">
+          <div>
+            <div class="panel-kicker" id="zoneCaption">北京时间 · UTC+8</div>
+            <h2 id="weekTitle">本周空档</h2>
+          </div>
+          <div class="week-nav" role="group" aria-label="周切换">
+            <label class="range-control">
+              <span>起点</span>
+              <select id="rangeMode" aria-label="日历起点">
+                <option value="today">从今天开始</option>
+                <option value="monday">从本周一开始</option>
+              </select>
+            </label>
+            <button class="square-button" id="prevWeek" type="button" title="上一周" aria-label="上一周">‹</button>
+            <button class="button secondary small" id="todayBtn" type="button">今天</button>
+            <button class="square-button" id="nextWeek" type="button" title="下一周" aria-label="下一周">›</button>
+          </div>
+        </div>
+
+        <div class="legend" aria-label="图例">
+          <span><i class="swatch free"></i>可以预约</span>
+          <span><i class="swatch lesson"></i>已排课</span>
+          <span><i class="swatch personal"></i>个人事务</span>
+          <span><i class="swatch rest"></i>休息</span>
+          <span class="tip">点击或拖动格子，将按左侧所选类型标记</span>
+        </div>
+
+        <div class="calendar-scroll" id="calendarScroll">
+          <div class="calendar-grid" id="calendarGrid" aria-label="每周课程时间表"></div>
+        </div>
+
+        <footer class="calendar-footer">
+          <span id="footerSummary"></span>
+          <span>时间已自动按所选时区换算</span>
+        </footer>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="sidebar-backdrop" id="sidebarBackdrop" hidden></div>
+  <script src="app.js"></script>
+</body>
+</html>

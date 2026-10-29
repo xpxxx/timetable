@@ -1,0 +1,19 @@
+{
+  "name": "课时空档 · 时区周历",
+  "short_name": "课时空档",
+  "description": "本地优先、支持多时区与导入导出的个人课程时间表。",
+  "lang": "zh-CN",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f7f3ec",
+  "theme_color": "#315f52",
+  "icons": [
+    {
+      "src": "assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
