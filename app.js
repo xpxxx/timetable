@@ -1,13 +1,23 @@
 const ZONES = [
-  { id: 'Asia/Shanghai', name: '北京 / 上海', short: '北京时间' },
-  { id: 'America/Toronto', name: '加拿大东部 · Toronto', short: '加东时间' },
-  { id: 'America/New_York', name: '美国东部 · New York', short: '美东时间' },
-  { id: 'America/Chicago', name: '美国中部 · Chicago', short: '芝加哥时间' },
-  { id: 'America/Vancouver', name: '加拿大西部 · Vancouver', short: '加西时间' },
-  { id: 'America/Los_Angeles', name: '美国西部 · Los Angeles', short: '美西时间' },
-  { id: 'Australia/Sydney', name: '澳洲东部 · Sydney', short: '悉尼时间' },
-  { id: 'Europe/London', name: '英国 · London', short: '英国时间' }
+  { id: 'Asia/Shanghai', name: '北京 / 上海', short: '北京时间', rule: '全年 UTC+8，不实行夏令时。' },
+  { id: 'America/Toronto', name: '加拿大东部 · Toronto', short: '加东时间', rule: '3月第二个周日 02:00 前进一小时；11月第一个周日 02:00 回拨。' },
+  { id: 'America/New_York', name: '美国东部 · New York', short: '美东时间', rule: '3月第二个周日 02:00 前进一小时；11月第一个周日 02:00 回拨。' },
+  { id: 'America/Chicago', name: '美国中部 · Chicago', short: '芝加哥时间', rule: '3月第二个周日 02:00 前进一小时；11月第一个周日 02:00 回拨。' },
+  { id: 'America/Vancouver', name: '加拿大西部 · Vancouver', short: '温哥华时间', rule: '2026年3月8日起全年 UTC−7；11月不再回拨。已兼容旧浏览器时区库。' },
+  { id: 'America/Los_Angeles', name: '美国西部 · Los Angeles', short: '美西时间', rule: '3月第二个周日 02:00 前进一小时；11月第一个周日 02:00 回拨。' },
+  { id: 'Australia/Sydney', name: '澳洲东部 · Sydney', short: '悉尼时间', rule: '10月第一个周日 02:00 前进一小时；4月第一个周日 03:00 回拨。' },
+  { id: 'Europe/London', name: '英国 · London', short: '英国时间', rule: '3月最后一个周日 01:00 GMT 前进；10月最后一个周日 02:00 BST 回拨。' }
 ];
+
+const {
+  partsInZone,
+  localDateNow,
+  zoneOffsetMinutes,
+  zonedToUtc,
+  formatTime,
+  formatDate,
+  zoneOffsetLabel
+} = TimezoneRules;
 
 const STORAGE_KEY = 'lesson-availability-v1';
 const BACKUP_APP_ID = 'lesson-availability';
@@ -168,25 +178,6 @@ function preferredStart() {
   const today = localDateNow(state.zone);
   return state.rangeMode === 'monday' ? mondayOf(today) : today;
 }
-function partsInZone(ms, timeZone) {
-  const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone, year: 'numeric', month: '2-digit', day: '2-digit',
-    hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
-  }).formatToParts(new Date(ms));
-  return Object.fromEntries(parts.filter(p => p.type !== 'literal').map(p => [p.type, Number(p.value)]));
-}
-function localDateNow(timeZone) { return dateKey(partsInZone(Date.now(), timeZone)); }
-function zoneOffsetMs(ms, timeZone) {
-  const p = partsInZone(ms, timeZone);
-  return Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute) - Math.floor(ms / 60000) * 60000;
-}
-function zonedToUtc(date, time, timeZone) {
-  const p = parseDateKey(date);
-  const [hour, minute] = time.split(':').map(Number);
-  let guess = Date.UTC(p.year, p.month - 1, p.day, hour, minute);
-  for (let i = 0; i < 3; i++) guess = Date.UTC(p.year, p.month - 1, p.day, hour, minute) - zoneOffsetMs(guess, timeZone);
-  return guess;
-}
 function beijingToUtc(date, time) {
   const p = parseDateKey(date);
   const [hour, minute] = time.split(':').map(Number);
@@ -195,18 +186,6 @@ function beijingToUtc(date, time) {
 function timeToMinutes(value) {
   const [h, m] = value.split(':').map(Number);
   return h * 60 + m;
-}
-function formatTime(ms, timeZone) {
-  return new Intl.DateTimeFormat('zh-CN', { timeZone, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(ms));
-}
-function formatDate(ms, timeZone, withYear = false) {
-  return new Intl.DateTimeFormat('zh-CN', { timeZone, ...(withYear && { year: 'numeric' }), month: 'numeric', day: 'numeric', weekday: 'short' }).format(new Date(ms));
-}
-function zoneOffsetLabel(timeZone, ms = Date.now()) {
-  const minutes = Math.round(zoneOffsetMs(ms, timeZone) / 60000);
-  const sign = minutes >= 0 ? '+' : '-';
-  const abs = Math.abs(minutes);
-  return `UTC${sign}${Math.floor(abs / 60)}${abs % 60 ? `:${pad(abs % 60)}` : ''}`;
 }
 function isRest(ms) {
   const p = partsInZone(ms, 'Asia/Shanghai');
@@ -259,6 +238,7 @@ function setSlotBusy(start, makeBusy, type = selectedSessionType()) {
 
 function init() {
   ZONES.forEach(z => zoneSelect.add(new Option(z.name, z.id)));
+  renderTimezoneRuleList();
   zoneSelect.value = ZONES.some(z => z.id === state.zone) ? state.zone : 'Asia/Shanghai';
   state.zone = zoneSelect.value;
   if (!state.weekStart || state.rangeMode === 'today') state.weekStart = preferredStart();
@@ -346,8 +326,33 @@ function addSession(event) {
 
 function render() {
   renderCalendar();
+  renderTimezoneNotice();
   renderSessionList();
   updateSummary();
+}
+
+function renderTimezoneRuleList() {
+  const list = $('timezoneRuleList');
+  list.innerHTML = '';
+  ZONES.forEach(zone => {
+    const item = document.createElement('li');
+    item.innerHTML = `<strong>${escapeHtml(zone.name)}</strong><span>${escapeHtml(zone.rule)}</span>`;
+    list.append(item);
+  });
+}
+
+function renderTimezoneNotice() {
+  const zone = state.zone;
+  const meta = ZONES.find(item => item.id === zone);
+  const firstNoon = zonedToUtc(state.weekStart, '12:00', zone);
+  const lastNoon = zonedToUtc(addDays(state.weekStart, 6), '12:00', zone);
+  const firstOffset = zoneOffsetMinutes(firstNoon, zone);
+  const lastOffset = zoneOffsetMinutes(lastNoon, zone);
+  $('timezoneRuleTitle').textContent = `${meta.short} · ${zoneOffsetLabel(zone, firstNoon)}`;
+  $('timezoneRuleText').textContent = firstOffset === lastOffset
+    ? meta.rule
+    : `本周发生时制切换：${zoneOffsetLabel(zone, firstNoon)} → ${zoneOffsetLabel(zone, lastNoon)}。${meta.rule}`;
+  $('timezoneNotice').classList.toggle('has-transition', firstOffset !== lastOffset);
 }
 
 function renderCalendar() {

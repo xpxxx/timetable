@@ -1,8 +1,9 @@
-const CACHE_NAME = 'lesson-availability-v1';
+const CACHE_NAME = 'lesson-availability-v2';
 const APP_SHELL = [
   './',
   './index.html',
   './styles.css',
+  './timezone-rules.js',
   './app.js',
   './manifest.webmanifest',
   './assets/icon.svg'

@@ -39,6 +39,21 @@
           <p>所有设置仅保存在当前浏览器。你只需标出已占用时段，其余非休息时间会自动显示为空闲。</p>
         </section>
 
+        <section class="panel timezone-rules-panel">
+          <div class="panel-heading compact">
+            <div>
+              <div class="panel-kicker">时区</div>
+              <h3>夏令时与冬令时</h3>
+            </div>
+            <span class="local-chip">自动换算</span>
+          </div>
+          <p class="help">换算基于地区规则，而不是固定时差；温哥华 2026 年新规已单独兼容。</p>
+          <details class="timezone-rules-details">
+            <summary>查看全部地区规则</summary>
+            <ul id="timezoneRuleList" class="timezone-rule-list"></ul>
+          </details>
+        </section>
+
         <section class="panel">
           <div class="panel-heading">
             <div>
@@ -143,6 +158,11 @@
           <span class="tip">点击或拖动格子，将按左侧所选类型标记</span>
         </div>
 
+        <div class="timezone-notice" id="timezoneNotice" role="status">
+          <strong id="timezoneRuleTitle">北京时间 · UTC+8</strong>
+          <span id="timezoneRuleText">全年 UTC+8，不实行夏令时。</span>
+        </div>
+
         <div class="calendar-scroll" id="calendarScroll">
           <div class="calendar-grid" id="calendarGrid" aria-label="每周课程时间表"></div>
         </div>
@@ -157,6 +177,7 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <div class="sidebar-backdrop" id="sidebarBackdrop" hidden></div>
+  <script src="timezone-rules.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

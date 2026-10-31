@@ -120,6 +120,13 @@ input:focus, select:focus { border-color: var(--green); box-shadow: 0 0 0 3px rg
 .import-button { display: flex; align-items: center; justify-content: center; color: white; cursor: pointer; }
 .backup-status { min-height: 14px; margin: 8px 0 -3px; color: var(--green); font-size: 10px; line-height: 1.4; }
 .backup-status.error { color: #b84835; }
+.timezone-rules-details { margin-top: 11px; border-top: 1px solid var(--line-soft); }
+.timezone-rules-details summary { padding-top: 10px; color: var(--green); font-size: 10px; font-weight: 750; cursor: pointer; }
+.timezone-rule-list { display: flex; flex-direction: column; gap: 9px; margin: 11px 0 0; padding: 0; list-style: none; }
+.timezone-rule-list li { padding-left: 8px; border-left: 2px solid var(--green-soft); }
+.timezone-rule-list strong, .timezone-rule-list span { display: block; }
+.timezone-rule-list strong { color: var(--ink); font-size: 10px; }
+.timezone-rule-list span { margin-top: 2px; color: var(--muted); font-size: 9px; line-height: 1.45; }
 .visually-hidden { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; margin: -1px !important; overflow: hidden !important; clip: rect(0, 0, 0, 0) !important; white-space: nowrap !important; border: 0 !important; }
 
 .calendar-card { min-width: 0; overflow: hidden; }
@@ -132,6 +139,9 @@ input:focus, select:focus { border-color: var(--green); box-shadow: 0 0 0 3px rg
 .legend { min-height: 37px; padding: 8px 18px; border-top: 1px solid var(--line-soft); border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 17px; color: var(--muted); font-size: 10px; }
 .legend span { display: flex; align-items: center; gap: 6px; }
 .legend .tip { margin-left: auto; }
+.timezone-notice { display: flex; align-items: baseline; gap: 9px; min-height: 37px; padding: 9px 18px; border-bottom: 1px solid var(--line); background: #f4f8f5; color: var(--muted); font-size: 10px; line-height: 1.45; }
+.timezone-notice strong { flex: 0 0 auto; color: var(--green-deep); }
+.timezone-notice.has-transition { background: #fff5e9; border-left: 3px solid #d88b3f; }
 .swatch { display: inline-block; width: 8px; height: 8px; border-radius: 2px; }
 .swatch.free { background: #acd0bc; }
 .swatch.lesson { background: var(--coral); }
@@ -208,6 +218,7 @@ body.shot-mode .calendar-footer { min-height: 27px; padding-top: 7px; padding-bo
   .week-nav { width: 100%; }
   .range-control { margin-right: auto; }
   .legend { gap: 11px; overflow-x: auto; white-space: nowrap; }
+  .timezone-notice { align-items: flex-start; flex-direction: column; gap: 2px; }
   .calendar-scroll { height: calc(100vh - 310px); min-height: 430px; }
   .calendar-grid { grid-template-columns: 50px repeat(7, minmax(82px, 1fr)); min-width: 650px; }
   .calendar-footer { gap: 8px; flex-direction: column; }
